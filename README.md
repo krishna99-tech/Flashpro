@@ -4,7 +4,7 @@ Flash is a powerful, "Hacker-style" Android network utility suite designed for n
 
 ## 📥 Download
 You can download the latest version of the Flash app here:
-[**Download Flash APK**](https://github.com/krishna99-tech/flash/releases/latest/download/app-debug.apk)
+[**Download Flash APK**](https://github.com/krishna99-tech/flashpro/releases/latest/download/app-debug.apk)
 
 ## 🚀 Features
 
