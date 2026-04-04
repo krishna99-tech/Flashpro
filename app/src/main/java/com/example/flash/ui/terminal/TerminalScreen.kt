@@ -30,6 +30,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flash.*
+import com.example.flash.ui.SectionHeader
 import com.example.flash.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -42,6 +43,7 @@ fun TerminalScreen() {
     val viewModel: TerminalViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
                 return TerminalViewModel(dao) as T
             }
         }
@@ -68,15 +70,18 @@ fun TerminalScreen() {
         Column(Modifier.fillMaxSize()) {
             // Persistent Top Bar
             if (viewModel.isConnected) {
-                Surface(color = TechDark, shadowElevation = 8.dp) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 8.dp
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         ScrollableTabRow(
                             selectedTabIndex = selectedTab,
-                            containerColor = TechDark,
-                            contentColor = TechBlue,
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.primary,
                             edgePadding = 0.dp,
                             modifier = Modifier.weight(1f),
                             divider = {}
@@ -124,7 +129,7 @@ fun TerminalScreen() {
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = TechBlue, strokeWidth = 4.dp)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 4.dp)
                     Spacer(Modifier.height(24.dp))
                     Text("NEGOTIATING ENCRYPTED LINK...", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     Spacer(Modifier.height(32.dp))
@@ -159,8 +164,8 @@ fun ServerSelector(viewModel: TerminalViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = TechPurple,
-                contentColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Node")
@@ -175,7 +180,7 @@ fun ServerSelector(viewModel: TerminalViewModel) {
                     FeatureCard(
                         title = server.name,
                         icon = Icons.Default.Dns,
-                        color = TechBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         onClick = { viewModel.connect(server) }
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -186,7 +191,7 @@ fun ServerSelector(viewModel: TerminalViewModel) {
                                 Icon(Icons.Default.DeleteSweep, "Delete", tint = Color.Red.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
                             }
                             Spacer(Modifier.width(8.dp))
-                            Icon(Icons.AutoMirrored.Filled.Login, null, tint = TechBlue, modifier = Modifier.size(20.dp))
+                            Icon(Icons.AutoMirrored.Filled.Login, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -265,7 +270,7 @@ fun TerminalView(viewModel: TerminalViewModel) {
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                focusedBorderColor = TechBlue,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = Color.DarkGray
                             )
                         )
@@ -279,9 +284,9 @@ fun TerminalView(viewModel: TerminalViewModel) {
                                     showInput = false
                                 }
                             },
-                            modifier = Modifier.size(48.dp).background(TechBlue, RoundedCornerShape(12.dp))
+                            modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                         ) {
-                            Icon(Icons.Default.Check, null, tint = Color.Black)
+                            Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                 }
@@ -293,8 +298,8 @@ fun TerminalView(viewModel: TerminalViewModel) {
             FloatingActionButton(
                 onClick = { showInput = true },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(32.dp),
-                containerColor = TechBlue,
-                contentColor = Color.Black,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Keyboard, contentDescription = "Open Input")
@@ -307,12 +312,12 @@ fun TerminalView(viewModel: TerminalViewModel) {
 fun FileExplorerView(viewModel: TerminalViewModel) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.FolderOpen, null, tint = TechBlue)
+            Icon(Icons.Default.FolderOpen, null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(8.dp))
-            Text(viewModel.currentPath, color = Color.White, fontWeight = FontWeight.Bold)
+            Text(viewModel.currentPath, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             Spacer(Modifier.weight(1f))
             IconButton(onClick = { viewModel.refreshFileList(viewModel.currentPath) }) {
-                Icon(Icons.Default.Refresh, null, tint = TechBlue)
+                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary)
             }
         }
         
@@ -321,19 +326,19 @@ fun FileExplorerView(viewModel: TerminalViewModel) {
         LazyColumn(Modifier.weight(1f)) {
             items(viewModel.remoteFiles) { file ->
                 ListItem(
-                    headlineContent = { Text(file.name, color = Color.White) },
+                    headlineContent = { Text(file.name, color = MaterialTheme.colorScheme.onSurface) },
                     supportingContent = { Text("${file.permissions} | ${file.size}B", fontSize = 10.sp, color = Color.Gray) },
                     leadingContent = { 
                         Icon(
                             if(file.isDirectory) Icons.Default.Folder else Icons.AutoMirrored.Filled.InsertDriveFile,
-                            null, tint = if(file.isDirectory) TechPurple else Color.Gray
+                            null, tint = if(file.isDirectory) MaterialTheme.colorScheme.secondary else Color.Gray
                         ) 
                     },
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.DarkGray, modifier = Modifier.size(16.dp)) },
                     modifier = Modifier.clickable { if(file.isDirectory) viewModel.refreshFileList(file.path) },
-                    colors = ListItemDefaults.colors(containerColor = TechSurface)
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
                 )
-                HorizontalDivider(color = Color.DarkGray, thickness = 0.5.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), thickness = 0.5.dp)
             }
         }
     }
@@ -345,31 +350,31 @@ fun MonitorDashboardView(viewModel: TerminalViewModel) {
     Column(Modifier.fillMaxSize().padding(20.dp)) {
         SectionHeader("Health Monitor", "Telemetry from remote node")
         
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = TechSurface)) {
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Speed, null, tint = TechBlue)
+                    Icon(Icons.Default.Speed, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(12.dp))
                     Text("CPU Utilization", fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
-                    Text("${stats.cpuUsage}%", color = TechBlue, fontWeight = FontWeight.Black)
+                    Text("${stats.cpuUsage}%", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
                 }
                 Spacer(Modifier.height(12.dp))
                 LinearProgressIndicator(
                     progress = { stats.cpuUsage / 100f },
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                    color = TechBlue,
-                    trackColor = Color.DarkGray
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 )
             }
         }
         
         Spacer(Modifier.height(16.dp))
         
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = TechSurface)) {
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Memory, null, tint = TechPurple)
+                    Icon(Icons.Default.Memory, null, tint = MaterialTheme.colorScheme.secondary)
                     Spacer(Modifier.width(12.dp))
                     Text("Physical Memory", fontWeight = FontWeight.Bold)
                 }
@@ -378,8 +383,8 @@ fun MonitorDashboardView(viewModel: TerminalViewModel) {
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                    color = TechPurple,
-                    trackColor = Color.DarkGray
+                    color = MaterialTheme.colorScheme.secondary,
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 )
                 Text("${stats.ramUsed.toInt()}MB / ${stats.ramTotal.toInt()}MB", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
             }
@@ -397,12 +402,12 @@ fun PresetsView(viewModel: TerminalViewModel) {
                 FeatureCard(
                     title = preset.name,
                     icon = preset.icon,
-                    color = TechAccent,
+                    color = MaterialTheme.colorScheme.tertiary,
                     onClick = { viewModel.sendCommand(preset.command) }
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(preset.command, color = Color.Gray, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
-                        Icon(Icons.Default.Bolt, null, tint = TechAccent, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Bolt, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(16.dp))
                     }
                 }
             }
@@ -411,10 +416,51 @@ fun PresetsView(viewModel: TerminalViewModel) {
 }
 
 @Composable
+fun FeatureCard(
+    title: String,
+    icon: ImageVector,
+    color: Color,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    title,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            content()
+        }
+    }
+}
+
+@Composable
 fun AddServerDialog(onDismiss: () -> Unit, onAdd: (RemoteServer) -> Unit) {
     var name by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("") }
-    var port by remember { mutableStateOf("443") }
+    var port by remember { mutableStateOf("22") }
     var user by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     
@@ -434,15 +480,15 @@ fun AddServerDialog(onDismiss: () -> Unit, onAdd: (RemoteServer) -> Unit) {
         },
         confirmButton = {
             Button({ 
-                val p = port.toIntOrNull() ?: 443
+                val p = port.toIntOrNull() ?: 22
                 onAdd(RemoteServer(name = name, host = host, user = user, password = pass, port = p)); 
                 onDismiss() 
             }) {
                 Text("DEPLOY")
             }
         },
-        containerColor = TechSurface,
-        titleContentColor = Color.White,
-        textContentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface
     )
 }

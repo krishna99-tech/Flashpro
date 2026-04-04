@@ -1,8 +1,16 @@
 package com.example.flash
 
+import android.content.Context
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Date
+import java.util.Locale
+import java.text.SimpleDateFormat
 
 data class IpInfo(
     @SerializedName("query") val ip: String = "N/A",
@@ -20,10 +28,12 @@ data class NetworkDevice(
     val vendor: String = "Unknown Vendor",
     val hostname: String = "Unknown Host",
     val deviceType: String = "Generic",
+    val os: String = "Unknown",
     val latency: Long = -1,
     val isOnline: Boolean = true,
     val isNew: Boolean = false,
-    val lastSeen: Long = System.currentTimeMillis()
+    val lastSeen: Long = System.currentTimeMillis(),
+    val name: String = "Unknown Device"
 )
 
 data class PingLog(
@@ -35,6 +45,7 @@ data class PingLog(
     val maxTime: Long = 0,
     val avgTime: Long = 0,
     val lastTime: Long = 0,
+    val ttl: Int = -1,
     val success: Boolean = false
 )
 
@@ -58,12 +69,29 @@ data class DnsResult(
     val type: String = "A"
 )
 
+data class WifiNetworkInfo(
+    val ssid: String,
+    val bssid: String,
+    val level: Int,
+    val frequency: Int,
+    val capabilities: String
+)
+
 data class SpeedTestMetrics(
     val downloadMbps: Double = 0.0,
     val uploadMbps: Double = 0.0,
     val latency: Long = 0,
     val jitter: Long = 0,
     val packetLoss: Double = 0.0
+)
+
+data class CapturedPacket(
+    val timestamp: Long = System.currentTimeMillis(),
+    val source: String,
+    val destination: String,
+    val protocol: String,
+    val length: Int,
+    val info: String
 )
 
 // --- SSH MODULAR MODELS ---
@@ -74,7 +102,7 @@ data class RemoteServer(
     val host: String,
     val user: String,
     val password: String,
-    val port: Int = 443
+    val port: Int = 22
 )
 
 data class CommandPreset(
@@ -103,13 +131,28 @@ data class ServerStats(
 object DeviceDiscoveryManager {
     val knownDevices = mutableStateListOf<NetworkDevice>()
     val discoveryLog = mutableStateListOf<String>()
+    val capturedPackets = mutableStateListOf<CapturedPacket>()
     var networkHealthScore = mutableIntStateOf(100)
+    var isScanning = mutableStateOf(false)
     
     fun updateNetworkHealth(score: Int) {
         networkHealthScore.intValue = score
     }
 
-    // Thread-safe additions for SnapshotStateLists
+    fun startScan(context: Context) {
+        val subnet = NetworkToolsManager.getLocalSubnet(context) ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            isScanning.value = true
+            synchronized(knownDevices) {
+                knownDevices.clear()
+            }
+            NetworkToolsManager.scanSubnet(subnet) { device ->
+                addIfNew(device)
+            }
+            isScanning.value = false
+        }
+    }
+
     fun addIfNew(device: NetworkDevice): Boolean {
         synchronized(knownDevices) {
             val exists = knownDevices.any { it.ip == device.ip }
@@ -124,9 +167,16 @@ object DeviceDiscoveryManager {
     
     fun addToHistory(device: NetworkDevice) {
         synchronized(discoveryLog) {
-            val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
-            discoveryLog.add(0, "[$timestamp] Detected ${device.ip} (${device.vendor})")
+            val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            discoveryLog.add(0, "[$timestamp] Detected ${device.ip} (${device.os})")
             if (discoveryLog.size > 50) discoveryLog.removeAt(50)
+        }
+    }
+
+    fun addPacket(packet: CapturedPacket) {
+        synchronized(capturedPackets) {
+            capturedPackets.add(0, packet)
+            if (capturedPackets.size > 100) capturedPackets.removeAt(100)
         }
     }
 }
