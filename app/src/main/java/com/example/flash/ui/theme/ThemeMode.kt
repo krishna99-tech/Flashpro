@@ -3,6 +3,9 @@ package com.example.flash.ui.theme
 enum class ThemeMode {
     LIGHT,
     DARK,
-    DEFAULT,
+    HACKER,
+    CYBERPUNK,
+    NEON_BLUE,
+    TERMINAL_RED,
     SYSTEM
 }

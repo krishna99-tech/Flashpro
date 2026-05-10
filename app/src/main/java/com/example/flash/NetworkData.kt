@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.Locale
 import java.text.SimpleDateFormat
@@ -32,8 +33,7 @@ data class NetworkDevice(
     val latency: Long = -1,
     val isOnline: Boolean = true,
     val isNew: Boolean = false,
-    val lastSeen: Long = System.currentTimeMillis(),
-    val name: String = "Unknown Device"
+    val lastSeen: Long = System.currentTimeMillis()
 )
 
 data class PingLog(
@@ -94,40 +94,6 @@ data class CapturedPacket(
     val info: String
 )
 
-// --- SSH MODULAR MODELS ---
-
-data class RemoteServer(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val name: String,
-    val host: String,
-    val user: String,
-    val password: String,
-    val port: Int = 22
-)
-
-data class CommandPreset(
-    val name: String,
-    val command: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
-)
-
-data class RemoteFile(
-    val name: String,
-    val path: String,
-    val isDirectory: Boolean,
-    val size: Long,
-    val permissions: String
-)
-
-data class ServerStats(
-    val cpuUsage: Float = 0f,
-    val ramUsed: Float = 0f,
-    val ramTotal: Float = 0f,
-    val diskUsed: Float = 0f,
-    val diskTotal: Float = 0f,
-    val uptime: String = "N/A"
-)
-
 object DeviceDiscoveryManager {
     val knownDevices = mutableStateListOf<NetworkDevice>()
     val discoveryLog = mutableStateListOf<String>()
@@ -139,11 +105,11 @@ object DeviceDiscoveryManager {
         networkHealthScore.intValue = score
     }
 
-    fun startScan(context: Context) {
+    fun startScan(context: Context, scope: CoroutineScope) {
         val subnet = NetworkToolsManager.getLocalSubnet(context) ?: return
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch(Dispatchers.IO) {
             isScanning.value = true
-            synchronized(knownDevices) {
+            withContext(Dispatchers.Main) {
                 knownDevices.clear()
             }
             NetworkToolsManager.scanSubnet(subnet) { device ->

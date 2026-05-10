@@ -6,9 +6,7 @@ import android.net.ConnectivityManager
 import android.net.TrafficStats
 import android.net.wifi.WifiManager
 import android.text.format.Formatter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Retrofit
@@ -66,8 +64,19 @@ object NetworkToolsManager {
         return@withContext try {
             val socket = Socket()
             socket.connect(InetSocketAddress(host, port), 250)
+
+            // Attempt to grab banner for more accurate identification
+            val banner = try {
+                socket.soTimeout = 500
+                if (port == 80 || port == 8080) {
+                    socket.getOutputStream().write("HEAD / HTTP/1.0\r\n\r\n".toByteArray())
+                    socket.getOutputStream().flush()
+                }
+                socket.getInputStream().bufferedReader().readLine() ?: ""
+            } catch (e: Exception) { "" }
+
             socket.close()
-            PortInfo(port, getServiceName(port), true)
+            PortInfo(port, getServiceName(port), true, banner)
         } catch (e: Exception) {
             PortInfo(port, "Closed", false)
         }
@@ -76,7 +85,6 @@ object NetworkToolsManager {
     private fun getServiceName(port: Int): String {
         return when (port) {
             21 -> "FTP"
-            22 -> "SSH"
             23 -> "Telnet"
             25 -> "SMTP"
             53 -> "DNS"
@@ -105,17 +113,17 @@ object NetworkToolsManager {
         return ipString.substringBeforeLast(".") + "."
     }
 
-    suspend fun scanSubnet(subnet: String, onDeviceFound: (NetworkDevice) -> Unit) = withContext(Dispatchers.IO) {
-        val reachableHosts = (1..254).map { i -> subnet + i }
-        reachableHosts.chunked(30).forEach { chunk ->
-            chunk.forEach { host ->
+    suspend fun scanSubnet(subnet: String, onDeviceFound: (NetworkDevice) -> Unit) = coroutineScope {
+        (1..254).map { i ->
+            async(Dispatchers.IO) {
+                val host = subnet + i
                 try {
                     val address = InetAddress.getByName(host)
-                    if (address.isReachable(300)) {
+                    if (address.isReachable(500)) {
                         val os = detectOS(host)
                         val device = NetworkDevice(
-                            name = if (address.hostName != host) address.hostName else "Node-${host.substringAfterLast(".")}",
                             ip = host,
+                            hostname = if (address.hostName != host) address.hostName else "Node-${host.substringAfterLast(".")}",
                             deviceType = getDeviceTypeFromOS(os),
                             os = os,
                             latency = (2L..60L).random(),
@@ -127,23 +135,45 @@ object NetworkToolsManager {
                     }
                 } catch (e: Exception) {}
             }
-        }
+        }.awaitAll()
     }
 
     private suspend fun detectOS(host: String): String {
-        val fingerPrintPorts = mapOf(
-            445 to "Windows",
-            62078 to "Apple (iOS/macOS)",
-            22 to "Linux (SSH)",
-            80 to "Linux (Web Server)",
-            3389 to "Windows (Server)",
-            53 to "Network Appliance"
-        )
+        val portsToProbe = listOf(80, 445, 62078, 3389, 53, 21, 25)
         
-        for ((port, osName) in fingerPrintPorts) {
-            if (checkPort(host, port).isOpen) return osName
+        for (port in portsToProbe) {
+            val info = checkPort(host, port)
+            if (info.isOpen) {
+                if (info.banner.isNotEmpty()) {
+                    val os = analyzeBanner(info.banner)
+                    if (os != "Generic Node") return os
+                }
+                
+                // Fallback to port-based fingerprinting
+                return when (port) {
+                    445 -> "Windows"
+                    62078 -> "Apple (iOS/macOS)"
+                    80 -> "Linux (Web Server)"
+                    3389 -> "Windows (Server)"
+                    53 -> "Network Appliance"
+                    else -> "Generic Node"
+                }
+            }
         }
         return "Generic Node"
+    }
+
+    private fun analyzeBanner(banner: String): String {
+        val b = banner.lowercase()
+        return when {
+            b.contains("ubuntu") || b.contains("debian") || b.contains("linux") -> "Linux"
+            b.contains("microsoft") || b.contains("windows") -> "Windows"
+            b.contains("apple") || b.contains("darwin") -> "Apple (iOS/macOS)"
+            b.contains("cisco") -> "Cisco IOS"
+            b.contains("mikrotik") -> "MikroTik"
+            b.contains("apache") || b.contains("nginx") -> "Linux (Web Server)"
+            else -> "Generic Node"
+        }
     }
 
     private fun getDeviceTypeFromOS(os: String): String {

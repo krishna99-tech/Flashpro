@@ -19,11 +19,12 @@ class ThemePreferences(private val context: Context) {
     }
 
     val themeFlow: Flow<ThemeMode> = context.dataStore.data.map { preferences ->
-        val themeName = preferences[THEME_KEY] ?: ThemeMode.SYSTEM.name
+        val themeName = preferences[THEME_KEY]
         try {
-            ThemeMode.valueOf(themeName)
+            if (themeName == null || themeName == "DEFAULT") ThemeMode.HACKER
+            else ThemeMode.valueOf(themeName)
         } catch (e: IllegalArgumentException) {
-            ThemeMode.SYSTEM
+            ThemeMode.HACKER
         }
     }
 

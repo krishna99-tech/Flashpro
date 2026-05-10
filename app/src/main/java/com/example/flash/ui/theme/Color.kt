@@ -2,6 +2,19 @@ package com.example.flash.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Radium / Neon Colors
+val RadiumGreen = Color(0xFF39FF14)
+val RadiumPink = Color(0xFFFF6EC7)
+val RadiumBlue = Color(0xFF00FFFF)
+val RadiumYellow = Color(0xFFFFFF33)
+val RadiumPurple = Color(0xFFBF00FF)
+val RadiumOrange = Color(0xFFFFAC1C)
+
+// Dark background for Radium theme
+val RadiumDark = Color(0xFF030303)
+val RadiumSurface = Color(0xFF0A0A0A)
+val RadiumCard = Color(0xFF121212)
+
 // Original Tech Colors
 val TechBlue = Color(0xFF00E5FF)
 val TechPurple = Color(0xFF7000FF)
@@ -15,11 +28,3 @@ val WarmAmber = Color(0xFFFFD54F)
 val WarmCoral = Color(0xFFFF8A65)
 val WarmDark = Color(0xFF1F1B16)
 val WarmSurface = Color(0xFF2C251F)
-
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)

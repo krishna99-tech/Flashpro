@@ -1,6 +1,6 @@
 # Flash Toolkit ⚡
 
-Flash is a powerful, "Hacker-style" Android network utility suite designed for network administrators, security enthusiasts, and power users. Built with modern Jetpack Compose and Material 3, it provides a comprehensive set of tools for network discovery, diagnostics, and remote server management.
+Flash is a powerful, "Hacker-style" Android network utility suite designed for network administrators, security enthusiasts, and power users. Built with modern Jetpack Compose and Material 3, it provides a comprehensive set of tools for network discovery and diagnostics.
 
 ## 📥 Download
 You can download the latest version of the Flash app here:
@@ -16,28 +16,21 @@ You can download the latest version of the Flash app here:
 ### 2. Network Mapper (Scanner)
 * **Subnet Discovery:** Automatically scan and list all devices in your local network.
 * **Deep Fingerprinting:** Identifies device types (Router, Smartphone, Laptop, etc.) using MAC OUI and service banners.
-* **OS Detection:** Guesses operating systems via SSH, HTTP, and VNC banner grabbing.
+* **OS Detection:** Guesses operating systems via HTTP and VNC banner grabbing.
 * **Vendor Identification:** Real-time MAC address vendor lookups.
 
-### 3. SSH Terminal & Remote Management
-* **Multi-Node Support:** Save and manage multiple remote server profiles.
-* **Interactive Shell:** A custom terminal interface with specialized keypads for mobile-friendly command execution (Ctrl, Alt, Tab, Esc).
-* **Remote File Explorer:** Navigate, view, and manage files on your remote servers.
-* **Telemetry Monitor:** Real-time CPU and RAM utilization tracking for connected nodes.
-* **Command Presets:** Execute frequently used commands with a single tap.
-
-### 4. Connectivity Diagnostics
+### 3. Connectivity Diagnostics
 * **Advanced Ping:** ICMP statistics with minimum, maximum, and average round-trip times.
 * **Visual Traceroute:** Map the path packets take across the internet.
 * **DNS Lookup:** Resolve hostnames and inspect DNS records.
 
-### 5. WiFi Analyzer
+### 4. WiFi Analyzer
 * **Signal Strength (RSSI):** Monitor signal quality with real-time dBm tracking.
 * **Spectrum Analysis:** Identify WiFi channels, frequencies, and bands (2.4GHz/5GHz).
 * **Interference Detection:** Estimate network congestion and overlapping Access Points.
 
-### 6. Security Audit
-* **Port Scanner:** Probe common ports (SSH, HTTP, FTP, etc.) for vulnerabilities.
+### 5. Security Audit
+* **Port Scanner:** Probe common ports (HTTP, FTP, etc.) for vulnerabilities.
 * **Encryption Audit:** Verify WiFi protocols (WPA2/WPA3-SAE).
 * **Rogue Device Alerts:** Notifies you when unknown devices appear on your network.
 
@@ -48,8 +41,6 @@ Flash features a unique **Hacker Default** theme (Neon Blue/Purple on Tech-Dark)
 * **UI:** Jetpack Compose & Material 3
 * **Navigation:** Compose Navigation
 * **Networking:** Retrofit & OkHttp
-* **SSH:** JSch (Java Secure Channel)
-* **Database:** Room Persistence Library
 * **Concurrency:** Kotlin Coroutines & Flow
 * **Architecture:** MVVM (Model-View-ViewModel)
 

@@ -1,207 +1,235 @@
-package com.example.flash.ui
+﻿package com.example.flash.ui
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
+import android.os.Build
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Radar
+import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.DeveloperBoard
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Router
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import com.example.flash.*
-import com.example.flash.ui.theme.TechBlue
-import com.example.flash.ui.theme.TechPurple
-import com.example.flash.ui.theme.TechSurface
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import com.example.flash.DeviceDiscoveryManager
+import com.example.flash.NavigationManager
+import com.example.flash.Screen
+import com.example.flash.SystemInfoManager
+import com.example.flash.ToolsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun DashboardScreen(navController: NavController) {
-    val health by remember { DeviceDiscoveryManager.networkHealthScore }
-    val context = LocalContext.current
-    val viewModel: ToolsViewModel = viewModel()
-    val ipInfo by viewModel.ipInfo.collectAsState()
+fun MatrixBackground(modifier: Modifier = Modifier) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val fontSize = 10.sp
+    val density = LocalDensity.current
+    val fontSizePx = with(density) { fontSize.toPx() }
+    val characters = remember { "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray() }
+    var ticker by remember { mutableStateOf(0f) }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchIpInfo(context)
+        while (true) {
+            ticker += 1f
+            kotlinx.coroutines.delay(30)
+        }
     }
 
+    Canvas(modifier = modifier.fillMaxSize().alpha(0.10f)) {
+        val cols = (size.width / fontSizePx).toInt()
+        val rows = (size.height / fontSizePx).toInt()
+        if (cols <= 0 || rows <= 0) return@Canvas
+
+        drawIntoCanvas { canvas ->
+            val paint = android.graphics.Paint().apply {
+                color = primaryColor.toArgb()
+                textSize = fontSizePx
+                typeface = android.graphics.Typeface.MONOSPACE
+                isAntiAlias = true
+            }
+
+            for (c in 0 until cols) {
+                val speed = ((c * 313) % 7 + 3) * 0.04f
+                val startOffset = (c * 197) % rows
+                val currentY = (ticker * speed + startOffset) % rows
+                val x = c * fontSizePx
+                val tailLength = 15
+                for (r in 0 until tailLength) {
+                    val rowIdx = (currentY.toInt() - r + rows) % rows
+                    val y = rowIdx * fontSizePx
+                    paint.alpha = if (r == 0) 255 else ((tailLength - r) / tailLength.toFloat() * 180).toInt().coerceIn(0, 255)
+                    val charIdx = (c + rowIdx + (ticker / 20).toInt()) % characters.size
+                    canvas.nativeCanvas.drawText(characters[charIdx].toString(), x, y, paint)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DashboardScreen(navigationManager: NavigationManager, viewModel: ToolsViewModel) {
+    val cpuUsage by viewModel.cpuUsage.collectAsState()
+    val batteryInfo by viewModel.batteryInfo.collectAsState()
+    val ipInfo by viewModel.ipInfo.collectAsState()
+    val wifiStatus by viewModel.wifiStatus.collectAsState()
+
     Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState())) {
-        SectionHeader("Command Center", "Real-time infrastructure intelligence")
-
-        // Modern Glassmorphism Health Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(32.dp))
-                .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f))))
-                .padding(1.dp)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
-        ) {
-            Row(Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(contentAlignment = Alignment.Center) {
-                    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-                    val scale by infiniteTransition.animateFloat(
-                        initialValue = 1f,
-                        targetValue = 1.05f,
-                        animationSpec = infiniteRepeatable(tween(2000), RepeatMode.Reverse),
-                        label = "scale"
-                    )
-                    
-                    CircularProgressIndicator(
-                        progress = { health / 100f },
-                        modifier = Modifier.size(90.dp).graphicsLayer(scaleX = scale, scaleY = scale),
-                        color = if (health > 80) Color(0xFF00FF88) else if (health > 50) MaterialTheme.colorScheme.primary else Color(0xFFFF4B4B),
-                        strokeWidth = 12.dp,
-                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                        strokeCap = StrokeCap.Round
-                    )
-                    Text("$health%", fontWeight = FontWeight.Black, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurface)
-                }
-                Spacer(Modifier.width(24.dp))
-                Column {
-                    Text("SYSTEM INTEGRITY", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, letterSpacing = 2.sp)
-                    Text(if(health > 80) "SECURE" else "VULNERABLE", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
-                    Text("Last audit: Just now", color = Color.Gray, fontSize = 11.sp)
+        SectionHeader("Flash Dashboard", "Live status and quick tools")
+        GlassCard(Modifier.fillMaxWidth().height(180.dp)) {
+            Box(Modifier.fillMaxSize()) {
+                Column(Modifier.align(Alignment.BottomStart)) {
+                    Text("Live System Core", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text("Animated telemetry surface", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(14.dp))
 
-        ModernSectionTitle("Edge Node Data", Icons.Default.Public)
-        
-        Card(
-            Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                ipInfo?.let { info ->
-                    ModernInfoRow("Gateway", info.ip, Icons.Default.Dns, MaterialTheme.colorScheme.primary)
-                    ModernInfoRow("Provider", info.isp, Icons.Default.Router, MaterialTheme.colorScheme.secondary)
-                    ModernInfoRow("Location", "${info.city}, ${info.country}", Icons.Default.Explore, Color.Yellow)
-                } ?: LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp), color = MaterialTheme.colorScheme.primary, trackColor = Color.Transparent)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DashboardMetricTile("CPU", "${cpuUsage.toInt()}%", Icons.Default.Memory, MaterialTheme.colorScheme.secondary, Modifier.weight(1f)) {
+                navigationManager.navigate(Screen.Hardware)
+            }
+            DashboardMetricTile("Battery", "${batteryInfo?.percentage ?: 0}%", Icons.Default.BatteryChargingFull, MaterialTheme.colorScheme.primary, Modifier.weight(1f)) {
+                navigationManager.navigate(Screen.Battery)
             }
         }
-        
-        Spacer(Modifier.height(32.dp))
-        
-        ModernSectionTitle("System Operations", Icons.Default.GridView)
-        
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            ModernActionCard("Radar Scan", Icons.Default.Radar, MaterialTheme.colorScheme.primary, Modifier.weight(1f)) { navController.navigate(Screen.NetworkMap.route) }
-            ModernActionCard("Performance", Icons.AutoMirrored.Filled.ShowChart, MaterialTheme.colorScheme.secondary, Modifier.weight(1f)) { navController.navigate(Screen.Diagnostics.route) }
+
+        Spacer(Modifier.height(14.dp))
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Network Identity", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                InfoLine(Icons.Default.Language, "ISP", ipInfo?.isp ?: "N/A")
+                InfoLine(Icons.Default.Public, "IP", ipInfo?.ip ?: "N/A")
+                InfoLine(Icons.Default.Public, "Location", "${ipInfo?.city ?: "N/A"}, ${ipInfo?.country ?: "N/A"}")
+                InfoLine(Icons.Default.Wifi, "WiFi", "${wifiStatus?.ssid ?: "N/A"} (${wifiStatus?.networkType ?: "Unknown"})")
+            }
         }
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            ModernActionCard("Sniffer Lab", Icons.Default.Search, Color(0xFF00FF88), Modifier.weight(1f)) { navController.navigate("packet_inspector") }
-            ModernActionCard("Secure SSH", Icons.Default.Terminal, Color(0xFFFFB74D), Modifier.weight(1f)) { navController.navigate(Screen.Terminal.route) }
+
+        Spacer(Modifier.height(20.dp))
+        Text("Tools", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ModernActionCard("Diagnostics", Icons.Default.Dns, MaterialTheme.colorScheme.primary, Modifier.weight(1f).height(120.dp)) {
+                navigationManager.navigate(Screen.Diagnostics)
+            }
+            ModernActionCard("WiFi", Icons.Default.Wifi, MaterialTheme.colorScheme.secondary, Modifier.weight(1f).height(120.dp)) {
+                navigationManager.navigate(Screen.WiFiAnalyzer)
+            }
         }
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ModernActionCard("Sensors", Icons.Default.Sensors, MaterialTheme.colorScheme.secondary, Modifier.weight(1f).height(120.dp)) {
+                navigationManager.navigate(Screen.Sensors)
+            }
+            ModernActionCard("Installed Apps", Icons.Default.Apps, MaterialTheme.colorScheme.primary, Modifier.weight(1f).height(120.dp)) {
+                navigationManager.navigate(Screen.Apps)
+            }
+        }
     }
 }
 
 @Composable
 fun NodesScreen() {
     val devices = DeviceDiscoveryManager.knownDevices
-    val isScanning by remember { DeviceDiscoveryManager.isScanning }
+    val isScanning by DeviceDiscoveryManager.isScanning
     val context = LocalContext.current
-    val viewModel: ToolsViewModel = viewModel()
+    val scope = rememberCoroutineScope()
 
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                SectionHeader("Network Topology", "Mapping ${devices.size} active identities")
-            }
-            Surface(
-                color = if(isScanning) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary,
-                shape = CircleShape,
-                modifier = Modifier.size(56.dp).clickable(enabled = !isScanning) { DeviceDiscoveryManager.startScan(context) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        MatrixBackground(Modifier.fillMaxSize())
+        Column(Modifier.fillMaxSize().padding(20.dp)) {
+            SectionHeader("Network Map", "Device discovery")
+            Button(
+                onClick = { DeviceDiscoveryManager.startScan(context, scope) },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                enabled = !isScanning,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (isScanning) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
-                    else Icon(Icons.Default.Radar, null, tint = MaterialTheme.colorScheme.onPrimary)
+                Text(if (isScanning) "Scanning..." else "Start Network Scan", fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(20.dp))
+            GlassCard(Modifier.fillMaxWidth()) {
+                val onlineCount = devices.count { it.isOnline }
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                    StatPill(Icons.Default.Devices, "Discovered", devices.size.toString(), Modifier.weight(1f))
+                    StatPill(Icons.Default.Router, "Online", onlineCount.toString(), Modifier.weight(1f))
                 }
             }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        if (devices.isEmpty() && !isScanning) {
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("No data in buffer. Initialize scan.", color = Color.Gray, fontWeight = FontWeight.Medium)
-            }
-        } else {
-            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Spacer(Modifier.height(12.dp))
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
                 items(devices) { device ->
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                modifier = Modifier.size(52.dp),
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        when(device.deviceType) {
-                                            "Router" -> Icons.Default.Router
-                                            "Smartphone" -> Icons.Default.Smartphone
-                                            "Computer" -> Icons.Default.Computer
-                                            else -> Icons.Default.Memory
-                                        },
-                                        null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(16.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(device.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                                Text(device.ip, color = MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
-                                Text("MAC: ${device.mac}", color = Color.Gray, fontSize = 10.sp)
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                IconButton(onClick = { viewModel.sendWakeOnLan(device.mac) }) {
-                                    Icon(Icons.Default.PowerSettingsNew, "WOL", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                }
-                                Text("${device.latency}ms", fontWeight = FontWeight.Black, color = Color(0xFF00FF88), fontSize = 12.sp)
-                            }
+                    GlassCard {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(deviceTypeIcon(device.os, device.deviceType), null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                            Spacer(Modifier.height(12.dp))
+                            Text(device.ip, color = Color.White, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                            Text(device.hostname, color = Color.Gray, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                            Text(device.os, color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -211,444 +239,223 @@ fun NodesScreen() {
 }
 
 @Composable
-fun InternetToolsScreen() {
-    val viewModel: ToolsViewModel = viewModel()
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var hostInput by remember { mutableStateOf("google.com") }
-    
+fun DiagnosticsScreen(viewModel: ToolsViewModel) {
     val pingResult by viewModel.pingResult.collectAsState()
-    val portResults by viewModel.portScanResults.collectAsState()
     val dnsResults by viewModel.dnsResults.collectAsState()
-    val tracerouteResults by viewModel.tracerouteResults.collectAsState()
-    
-    val isScanning by viewModel.isScanning.collectAsState()
-    val isTracerouteRunning by viewModel.isTracerouteRunning.collectAsState()
+    var pingHost by remember { mutableStateOf("8.8.8.8") }
+    var dnsDomain by remember { mutableStateOf("google.com") }
 
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        SectionHeader("Protocol Lab", "Advanced traffic synthesis")
-        
-        TextField(
-            value = hostInput,
-            onValueChange = { hostInput = it },
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
-            placeholder = { Text("Enter target identity...", color = Color.Gray) },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            shape = RoundedCornerShape(16.dp),
-            singleLine = true,
-            trailingIcon = { Icon(Icons.Default.Podcasts, null, tint = MaterialTheme.colorScheme.primary) }
-        )
-        
-        Spacer(Modifier.height(24.dp))
-        
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(Modifier.padding(4.dp)) {
-                ModernTabItem("PING", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
-                ModernTabItem("NMAP", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
-                ModernTabItem("DNS", selectedTab == 2, Modifier.weight(1f)) { selectedTab = 2 }
-                ModernTabItem("TRACE", selectedTab == 3, Modifier.weight(1f)) { selectedTab = 3 }
-            }
-        }
-        
-        Spacer(Modifier.height(24.dp))
-        
-        Box(Modifier.weight(1f)) {
-            when(selectedTab) {
-                0 -> PingView(hostInput, pingResult) { viewModel.runPing(hostInput) }
-                1 -> PortScanView(hostInput, portResults, isScanning) { viewModel.runPortScan(hostInput, 1, 1024) }
-                2 -> DnsView(hostInput, dnsResults) { viewModel.runDnsLookup(hostInput) }
-                3 -> TracerouteView(hostInput, tracerouteResults, isTracerouteRunning) { viewModel.runTraceroute(hostInput) }
-            }
-        }
-    }
-}
-
-@Composable
-fun PacketInspectorScreen() {
-    var isCapturing by remember { mutableStateOf(false) }
-    val packets = DeviceDiscoveryManager.capturedPackets
-    val context = LocalContext.current
-    
-    LaunchedEffect(isCapturing) {
-        if (isCapturing) {
-            while(isCapturing) {
-                val packet = NetworkToolsManager.captureRealPacket(context)
-                DeviceDiscoveryManager.addPacket(packet)
-                delay((100..500).random().toLong())
-            }
-        }
-    }
-
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                SectionHeader("Frame Buffer", "Capturing live data stream")
-            }
-            IconButton(
-                onClick = { isCapturing = !isCapturing },
-                modifier = Modifier.size(56.dp).background(if(isCapturing) Color(0xFFFF4B4B) else MaterialTheme.colorScheme.primary, CircleShape)
-            ) {
-                Icon(if(isCapturing) Icons.Default.Stop else Icons.Default.PlayArrow, null, tint = MaterialTheme.colorScheme.onPrimary)
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Surface(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            color = Color.Black,
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface)
-        ) {
-            LazyColumn(Modifier.fillMaxSize().padding(12.dp)) {
-                items(packets) { packet ->
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(packet.protocol, Modifier.width(60.dp), color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Black, fontSize = 10.sp)
-                        Column {
-                            Text("${packet.source} → ${packet.destination}", color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                            Text(packet.info, color = Color.Gray, fontSize = 10.sp, maxLines = 1)
-                        }
-                    }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surface, thickness = 0.5.dp)
-                }
-            }
-        }
-    }
-}
-
-// --- MODERN UI UTILS ---
-
-@Composable
-fun ModernSectionTitle(title: String, icon: ImageVector) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-    }
-}
-
-@Composable
-fun ModernTabItem(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
-            .clickable { onClick() }
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(label, color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.Gray, fontWeight = FontWeight.Black, fontSize = 11.sp)
-    }
-}
-
-@Composable
-fun ModernInfoRow(label: String, value: String, icon: ImageVector, color: Color) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(Modifier.size(36.dp), shape = CircleShape, color = color.copy(alpha = 0.1f)) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
-            }
-        }
-        Spacer(Modifier.width(16.dp))
-        Column {
-            Text(label, color = Color.Gray, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Text(value, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-        }
-    }
-}
-
-@Composable
-fun ModernActionCard(label: String, icon: ImageVector, color: Color, modifier: Modifier, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.height(120.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, color.copy(alpha = 0.1f))
-    ) {
-        Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Icon(icon, null, tint = color, modifier = Modifier.size(28.dp))
-            Text(label, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
-        }
-    }
-}
-
-// --- SUB-VIEWS ---
-
-@Composable
-fun DnsView(host: String, results: List<DnsResult>, onRun: () -> Unit) {
-    Column {
-        Button(onClick = onRun, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-            Text("EXECUTE RESOLVER", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black)
-        }
-        Spacer(Modifier.height(20.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(results) { record ->
-                Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)).padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Language, null, tint = MaterialTheme.colorScheme.secondary)
-                        Spacer(Modifier.width(16.dp))
-                        Column {
-                            Text(record.ip, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                            Text(record.domain, color = Color.Gray, fontSize = 12.sp)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TracerouteView(host: String, results: List<TracerouteStep>, isRunning: Boolean, onRun: () -> Unit) {
-    Column {
-        Button(onClick = onRun, enabled = !isRunning, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-            if (isRunning) CircularProgressIndicator(Modifier.size(20.dp), color = Color.White)
-            else Text("INITIATE TRACE", fontWeight = FontWeight.Black)
-        }
-        Spacer(Modifier.height(20.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(results) { step ->
-                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("${step.hop}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, modifier = Modifier.width(32.dp))
-                    Text(step.ip, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f), fontFamily = FontFamily.Monospace)
-                    Text("${step.time}ms", color = Color.Gray, fontSize = 12.sp)
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(vertical = 4.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun PingView(host: String, result: PingLog?, onRun: () -> Unit) {
-    Column {
-        Button(onClick = onRun, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-            Text("SEND ICMP PROBE", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
-        }
-        Spacer(Modifier.height(24.dp))
-        result?.let {
-            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp)).padding(24.dp)) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).background(if(it.success) Color.Green else Color.Red, CircleShape))
-                        Spacer(Modifier.width(12.dp))
-                        Text(if(it.success) "HOST REACHABLE" else "REQUEST TIMEOUT", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    Text("Latency: ${it.avgTime}ms", color = MaterialTheme.colorScheme.primary, fontSize = 24.sp, fontWeight = FontWeight.Black)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PortScanView(host: String, results: List<PortInfo>, isScanning: Boolean, onRun: () -> Unit) {
-    Column {
-        Button(onClick = onRun, enabled = !isScanning, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-            if (isScanning) CircularProgressIndicator(Modifier.size(20.dp), color = Color.White)
-            else Text("START NMAP SCAN", fontWeight = FontWeight.Black)
-        }
-        Spacer(Modifier.height(20.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(results) { port ->
-                Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp)).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LockOpen, null, tint = Color.Green, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text("PORT ${port.port}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Spacer(Modifier.weight(1f))
-                    Text(port.service, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun WifiAnalyzerScreen() {
-    val context = LocalContext.current
-    var networks by remember { mutableStateOf(emptyList<WifiNetworkInfo>()) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    
-    fun refresh() {
-        isRefreshing = true
-        networks = NetworkToolsManager.getWifiScanResults(context)
-        isRefreshing = false
-    }
-
-    LaunchedEffect(Unit) { refresh() }
-
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                SectionHeader("WiFi Radar", "${networks.size} spectrum signatures")
-            }
-            IconButton(onClick = { refresh() }, modifier = Modifier.background(MaterialTheme.colorScheme.primary, CircleShape)) {
-                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onPrimary)
-            }
-        }
-        
-        Spacer(Modifier.height(24.dp))
-
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            items(networks.sortedByDescending { it.level }) { network ->
-                Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp)).padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Wifi, null, tint = if(network.level > -60) Color.Green else Color.Yellow)
-                        Spacer(Modifier.width(16.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(network.ssid, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                            Text(network.capabilities, color = Color.Gray, fontSize = 10.sp, maxLines = 1)
-                        }
-                        Text("${network.level} dBm", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SecurityScreen() {
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        SectionHeader("Shield Protocol", "Vulnerability assessment active")
-        
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.surface, Color.Black)), RoundedCornerShape(24.dp))
-                .padding(24.dp)
-        ) {
+    Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("Diagnostics", "ICMP ping and DNS lookup")
+        OutlinedTextField(value = pingHost, onValueChange = { pingHost = it }, label = { Text("ICMP Host") }, modifier = Modifier.fillMaxWidth())
+        Button(onClick = { viewModel.runPing(pingHost.trim()) }, modifier = Modifier.fillMaxWidth()) { Text("Run Ping") }
+        GlassCard(Modifier.fillMaxWidth()) {
             Column {
+                InfoLine(Icons.Default.Radar, "Ping Status", if (pingResult?.success == true) "Success" else "Failed")
+                InfoLine(Icons.Default.Memory, "Average Time", "${pingResult?.avgTime ?: 0} ms")
+                InfoLine(Icons.Default.Dns, "Packets Lost", "${pingResult?.lost ?: 0}")
+            }
+        }
+
+        OutlinedTextField(value = dnsDomain, onValueChange = { dnsDomain = it }, label = { Text("DNS Domain") }, modifier = Modifier.fillMaxWidth())
+        Button(onClick = { viewModel.runDnsLookup(dnsDomain.trim()) }, modifier = Modifier.fillMaxWidth()) { Text("Run DNS Lookup") }
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("DNS Results", fontWeight = FontWeight.Bold)
+                if (dnsResults.isEmpty()) {
+                    Text("No results yet")
+                } else {
+                    dnsResults.take(8).forEach { Text("${it.type}: ${it.ip}") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoScreen(viewModel: ToolsViewModel, navigationManager: NavigationManager) {
+    val ipInfo by viewModel.ipInfo.collectAsState()
+    val wifiStatus by viewModel.wifiStatus.collectAsState()
+
+    Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("System Info", "OS, model, network and modules")
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                InfoLine(Icons.Default.PhoneAndroid, "Model", Build.MODEL)
+                InfoLine(Icons.Default.DeveloperBoard, "Manufacturer", Build.MANUFACTURER)
+                InfoLine(Icons.Default.Android, "OS", "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
+                InfoLine(Icons.Default.Wifi, "WiFi Connection", if (wifiStatus?.connected == true) "Connected" else "Disconnected")
+                InfoLine(Icons.Default.Wifi, "SSID", wifiStatus?.ssid ?: "N/A")
+                InfoLine(Icons.Default.Public, "IP", ipInfo?.ip ?: wifiStatus?.ipAddress ?: "N/A")
+                InfoLine(Icons.Default.Language, "ISP", ipInfo?.isp ?: "N/A")
+                InfoLine(Icons.Default.Public, "Location", "${ipInfo?.city ?: "N/A"}, ${ipInfo?.country ?: "N/A"}")
+            }
+        }
+
+        ModernActionCard("Open Inspector", Icons.Default.DeveloperBoard, MaterialTheme.colorScheme.primary, Modifier.fillMaxWidth().height(80.dp)) {
+            navigationManager.navigate(Screen.DeviceInspector)
+        }
+    }
+}
+
+@Composable
+fun HardwareScreen(viewModel: ToolsViewModel) {
+    val cpuUsage by viewModel.cpuUsage.collectAsState()
+    val cpuHistory by viewModel.cpuHistory.collectAsState()
+    val ramInfo by viewModel.ramInfo.collectAsState()
+    val storageInfo by viewModel.storageInfo.collectAsState()
+    val installedApps by viewModel.installedApps.collectAsState()
+    val sensors by viewModel.sensors.collectAsState()
+    val deviceCapabilities by viewModel.deviceCapabilities.collectAsState()
+    val batteryInfo by viewModel.batteryInfo.collectAsState()
+    val hw = remember { SystemInfoManager.getHardwareInfo() }
+    val batteryIcon = if ((batteryInfo?.percentage ?: 0) > 20) Icons.Default.BatteryChargingFull else Icons.Default.BatteryAlert
+
+    Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("Hardware Mapping", "CPU, battery, memory and device modules")
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.VerifiedUser, null, tint = Color(0xFF00FF88), modifier = Modifier.size(32.dp))
-                    Spacer(Modifier.width(16.dp))
-                    Text("CORE INTEGRITY: OPTIMAL", fontWeight = FontWeight.Black, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Icon(Icons.Default.Memory, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(8.dp))
+                    Text("CPU Usage: ${cpuUsage.toInt()}%")
                 }
-                Spacer(Modifier.height(24.dp))
-                SecurityToggle("Real-time Protection", true)
-                SecurityToggle("Encrypted Tunnel", false)
-                SecurityToggle("Deep Frame Analysis", true)
+                CpuUsageGraph(cpuHistory)
             }
         }
-        
-        Spacer(Modifier.weight(1f))
-        
-        Button(onClick = {}, modifier = Modifier.fillMaxWidth().height(60.dp), shape = RoundedCornerShape(20.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-            Text("INITIALIZE PEN-TEST", fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-        }
-    }
-}
-
-@Composable
-fun SecurityToggle(label: String, initial: Boolean) {
-    var checked by remember { mutableStateOf(initial) }
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = Color.Gray, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = { checked = it }, colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary))
-    }
-}
-
-@Composable
-fun DiagnosticsScreen() {
-    val viewModel: ToolsViewModel = viewModel()
-    val speedMetrics by viewModel.speedTestMetrics.collectAsState()
-    val isRunning by viewModel.isSpeedTestRunning.collectAsState()
-
-    Column(Modifier.fillMaxSize().padding(20.dp)) {
-        SectionHeader("Telemetry", "System performance synthesis")
-        
-        Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(32.dp)).padding(24.dp)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("NETWORK SPEED TEST", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, fontSize = 12.sp, letterSpacing = 2.sp)
-                Spacer(Modifier.height(32.dp))
-                
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    SpeedMetricGauge("DOWNLOAD", speedMetrics.downloadMbps, "Mb/s", MaterialTheme.colorScheme.primary)
-                    SpeedMetricGauge("UPLOAD", speedMetrics.uploadMbps, "Mb/s", MaterialTheme.colorScheme.secondary)
-                }
-                
-                Spacer(Modifier.height(32.dp))
-                
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    DiagnosticMiniMetric("LATENCY", "${speedMetrics.latency}", "ms")
-                    DiagnosticMiniMetric("JITTER", "${speedMetrics.jitter}", "ms")
-                }
-                
-                Spacer(Modifier.height(40.dp))
-                
-                Button(
-                    onClick = { viewModel.runSpeedTest() },
-                    enabled = !isRunning,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    if (isRunning) CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
-                    else Text("START DIAGNOSTIC", fontWeight = FontWeight.Black)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SpeedMetricGauge(label: String, value: Double, unit: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(
-                progress = { (value / 100f).toFloat() },
-                modifier = Modifier.size(100.dp),
-                color = color,
-                strokeWidth = 8.dp,
-                trackColor = color.copy(alpha = 0.1f),
-                strokeCap = StrokeCap.Round
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SpecCard(
+                icon = Icons.Default.Memory,
+                title = "CPU",
+                value = "${cpuUsage.toInt()}%",
+                modifier = Modifier.weight(1f)
             )
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(String.format("%.1f", value), fontWeight = FontWeight.Black, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
-                Text(unit, fontSize = 10.sp, color = Color.Gray)
+            SpecCard(
+                icon = Icons.Default.GraphicEq,
+                title = "GPU",
+                value = deviceCapabilities?.gpuName ?: "Unavailable",
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SpecCard(
+                icon = Icons.Default.Storage,
+                title = "RAM Total",
+                value = formatBytes(ramInfo?.total ?: 0L),
+                modifier = Modifier.weight(1f)
+            )
+            SpecCard(
+                icon = Icons.Default.Storage,
+                title = "RAM Free",
+                value = formatBytes(ramInfo?.available ?: 0L),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SpecCard(
+                icon = Icons.Default.SdStorage,
+                title = "Storage Total",
+                value = formatBytes(storageInfo?.total ?: 0L),
+                modifier = Modifier.weight(1f)
+            )
+            SpecCard(
+                icon = Icons.Default.SdStorage,
+                title = "Storage Free",
+                value = formatBytes(storageInfo?.available ?: 0L),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                HardwareRow(Icons.Default.PhoneAndroid, "System Model", hw.model)
+                HardwareRow(Icons.Default.DeveloperBoard, "Architecture", hw.architecture)
+                HardwareRow(Icons.Default.Android, "Android Version", "${hw.androidVersion} (SDK ${hw.sdkVersion})")
+                HardwareRow(Icons.Default.Memory, "Processor", deviceCapabilities?.processorName ?: hw.chipName)
+                HardwareRow(Icons.Default.GraphicEq, "GPU", deviceCapabilities?.gpuName ?: "Unavailable")
             }
         }
-        Spacer(Modifier.height(12.dp))
-        Text(label, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.Gray)
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                HardwareRow(Icons.Default.BatteryChargingFull, "Battery", "${batteryInfo?.percentage ?: 0}%")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(batteryIcon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Battery Health: ${batteryInfo?.health ?: "Unknown"}")
+                }
+                HardwareRow(Icons.Default.Storage, "RAM Total", formatBytes(ramInfo?.total ?: 0L))
+                HardwareRow(Icons.Default.SdStorage, "Storage Total", formatBytes(storageInfo?.total ?: 0L))
+                HardwareRow(Icons.Default.SdStorage, "Storage Free", formatBytes(storageInfo?.available ?: 0L))
+                HardwareRow(Icons.Default.Apps, "Installed Apps", installedApps.size.toString())
+                HardwareRow(Icons.Default.Sensors, "Sensors", sensors.size.toString())
+                HardwareRow(Icons.Default.CameraAlt, "Camera Modules", (deviceCapabilities?.cameraCount ?: 0).toString())
+                HardwareRow(Icons.Default.Bluetooth, "Bluetooth", if (deviceCapabilities?.bluetoothAvailable == true) "Available" else "Not available")
+                HardwareRow(Icons.Default.GraphicEq, "Audio", if (deviceCapabilities?.audioAvailable == true) "Available" else "Unavailable")
+                HardwareRow(Icons.Default.Memory, "Memory", formatBytes(deviceCapabilities?.memoryTotal ?: 0L))
+            }
+        }
     }
 }
 
 @Composable
-fun DiagnosticMiniMetric(label: String, value: String, unit: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value + unit, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-        Text(label, fontSize = 10.sp, color = Color.Gray)
+fun SoftwareScreen() {
+    val hw = remember { SystemInfoManager.getHardwareInfo() }
+    Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("Software", "OS details and build data")
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Android Version: ${hw.androidVersion}")
+                Text("SDK: ${hw.sdkVersion}")
+                Text("Security Patch: ${hw.securityPatch}")
+                Text("Build Number: ${hw.buildNumber}")
+            }
+        }
     }
 }
 
 @Composable
-fun AnalyticsScreen() {
-    val logs = DeviceDiscoveryManager.discoveryLog
+fun BatteryScreen(viewModel: ToolsViewModel) {
+    val batteryInfo by viewModel.batteryInfo.collectAsState()
     Column(Modifier.fillMaxSize().padding(20.dp)) {
-        SectionHeader("Blackbox Log", "Persistent event stream")
-        Surface(Modifier.fillMaxSize(), color = Color.Black, shape = RoundedCornerShape(24.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface)) {
-            LazyColumn(Modifier.padding(16.dp)) {
-                items(logs) { log ->
-                    Text(
-                        text = "> $log",
-                        color = Color(0xFF00FF41),
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
+        SectionHeader("Battery", "Power and health status")
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SpecCard(
+                icon = Icons.Default.BatteryChargingFull,
+                title = "Level",
+                value = "${batteryInfo?.percentage ?: 0}%",
+                modifier = Modifier.weight(1f)
+            )
+            SpecCard(
+                icon = Icons.Default.GraphicEq,
+                title = "Temperature",
+                value = "${batteryInfo?.temperature ?: 0f}°C",
+                modifier = Modifier.weight(1f)
+            )
+        }
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Level: ${batteryInfo?.percentage ?: 0}%")
+                Text("Charging: ${if (batteryInfo?.isCharging == true) "Yes" else "No"}")
+                Text("Health: ${batteryInfo?.health ?: "Unknown"}")
+                Text("Temperature: ${batteryInfo?.temperature ?: 0f}°C")
+                Text("Technology: ${batteryInfo?.technology ?: "Unknown"}")
+            }
+        }
+    }
+}
+
+@Composable
+fun AppsScreen(viewModel: ToolsViewModel) {
+    val apps by viewModel.installedApps.collectAsState()
+    Column(Modifier.fillMaxSize().padding(20.dp)) {
+        SectionHeader("Installed Apps", "Package inventory")
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(apps.take(120)) { app ->
+                GlassCard(Modifier.fillMaxWidth()) {
+                    Column {
+                        Text(app.name, fontWeight = FontWeight.Bold)
+                        Text(app.packageName, style = MaterialTheme.typography.labelSmall)
+                        Text("Version: ${app.version} | System: ${if (app.isSystemApp) "Yes" else "No"}")
+                    }
                 }
             }
         }
@@ -656,17 +463,118 @@ fun AnalyticsScreen() {
 }
 
 @Composable
-fun InfoScreen() {
-    Column(Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Surface(Modifier.size(100.dp), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.FlashOn, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(60.dp))
+fun SensorsScreen(viewModel: ToolsViewModel) {
+    val sensors by viewModel.sensors.collectAsState()
+    Column(Modifier.fillMaxSize().padding(20.dp)) {
+        SectionHeader("Sensors", "Available hardware sensors")
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(sensors) { sensor ->
+                GlassCard(Modifier.fillMaxWidth()) { Text(sensor) }
             }
         }
-        Spacer(Modifier.height(24.dp))
-        Text("FLASH PRO", fontSize = 32.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-        Text("STABLE GOLD EDITION", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-        Spacer(Modifier.height(48.dp))
-        Text("Designed for infrastructure auditing and security research. v1.0.4", textAlign = TextAlign.Center, color = Color.Gray)
     }
 }
+
+@Composable
+fun WifiAnalyzerScreen(viewModel: ToolsViewModel) {
+    val wifiStatus by viewModel.wifiStatus.collectAsState()
+    Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("WiFi Connection", "Connection and status")
+        GlassCard(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                InfoLine(Icons.Default.Wifi, "Status", if (wifiStatus?.connected == true) "Connected" else "Disconnected")
+                InfoLine(Icons.Default.Router, "Network Type", wifiStatus?.networkType ?: "Unknown")
+                InfoLine(Icons.Default.Wifi, "SSID", wifiStatus?.ssid ?: "N/A")
+                InfoLine(Icons.Default.Public, "Local IP", wifiStatus?.ipAddress ?: "N/A")
+            }
+        }
+    }
+}
+
+private fun formatBytes(value: Long): String {
+    if (value <= 0) return "0 B"
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    var size = value.toDouble()
+    var index = 0
+    while (size >= 1024 && index < units.lastIndex) {
+        size /= 1024
+        index++
+    }
+    return "%.2f %s".format(size, units[index])
+}
+
+@Composable
+private fun HardwareRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(8.dp))
+        Text("$label: $value")
+    }
+}
+
+@Composable
+private fun CpuUsageGraph(history: List<Float>) {
+    val safe = if (history.isEmpty()) listOf(0f) else history
+    val lineColor = MaterialTheme.colorScheme.primary
+    Canvas(Modifier.fillMaxWidth().height(120.dp)) {
+        val path = Path()
+        safe.forEachIndexed { index, value ->
+            val x = (index.toFloat() / (safe.lastIndex.coerceAtLeast(1))) * size.width
+            val y = size.height - ((value.coerceIn(0f, 100f) / 100f) * size.height)
+            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(path = path, color = lineColor)
+    }
+}
+
+@Composable
+private fun InfoLine(icon: ImageVector, label: String, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("$label: $value")
+    }
+}
+
+@Composable
+private fun StatPill(icon: ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+private fun deviceTypeIcon(os: String, type: String): ImageVector {
+    val tag = "$os $type".lowercase()
+    return when {
+        tag.contains("router") || tag.contains("network") -> Icons.Default.Router
+        tag.contains("apple") || tag.contains("android") || tag.contains("phone") -> Icons.Default.PhoneAndroid
+        tag.contains("windows") || tag.contains("linux") || tag.contains("computer") -> Icons.Default.Devices
+        else -> Icons.Default.Dns
+    }
+}
+
+@Composable
+private fun SpecCard(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    GlassCard(modifier.heightIn(min = 92.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+
